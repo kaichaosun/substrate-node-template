@@ -12,6 +12,45 @@ services:
       - "cargo-git-cache:/root/.cargo/git"
     command: cargo run --release -- --dev --ws-external
 
+  alice:
+    image: parity/rust:nightly
+    working_dir: /alice
+    ports:
+      - "9943:9944"
+      - "30333:30333"
+    volumes:
+      - ".:/alice"
+      - "cargo-registry-cache:/root/.cargo/registry"
+      - "cargo-git-cache:/root/.cargo/git"
+    networks:
+      local_testnet:
+        ipv4_address: 172.28.0.2
+    links:
+      - bob
+    command: ./scripts/start-alice.sh
+
+  bob:
+    image: parity/rust:nightly
+    working_dir: /bob
+    ports:
+      - "9942:9944"
+      - "30334:30333"
+    volumes:
+      - ".:/bob"
+      - "cargo-registry-cache:/root/.cargo/registry"
+      - "cargo-git-cache:/root/.cargo/git"
+    networks:
+      local_testnet:
+        ipv4_address: 172.28.0.3
+    command: ./scripts/start-bob.sh
+
 volumes:
   cargo-registry-cache:
   cargo-git-cache:
+
+networks:
+  local_testnet:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16
